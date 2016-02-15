@@ -18,6 +18,9 @@ from trac.web.chrome import ITemplateProvider, add_ctxtnav, add_script, \
                             add_script_data, add_stylesheet
 from trac.web.main import IRequestFilter, IRequestHandler
 
+from trac.util.translation import domain_functions
+_, N_, add_domain = domain_functions('quiet', ('_', 'N_', 'add_domain'))
+
 from quiet.api import QuietSystem
 
 
@@ -43,13 +46,13 @@ except ImportError:
 class QuietBase(object):
     """Shared class for common methods."""
 
-    enter_label = Option('quiet', 'enter_label', _('Enter Quiet Mode'))
-    leave_label = Option('quiet', 'leave_label', _('Leave Quiet Mode'))
+    ENTER_LABEL = N_('Enter Quiet Mode')
+    LEAVE_LABEL = N_('Leave Quiet Mode')
 
     def _get_label(self, req, is_quiet=None):
         if is_quiet is None:
             is_quiet = self._is_quiet(req)
-        return is_quiet and _(self.leave_label) or _(self.enter_label)
+        return is_quiet and self.LEAVE_LABEL or self.ENTER_LABEL
 
     def _set_quiet_action(self, req, action):
         if action == 'toggle':
@@ -75,6 +78,15 @@ class QuietBase(object):
 class QuietModule(Component, QuietBase):
     implements(IRequestFilter, ITemplateProvider, IPermissionRequestor)
 
+    def __init__ (self):
+        import pkg_resources
+        try:
+            locale_dir = pkg_resources.resource_filename(__name__, 'locale')
+        except KeyError:
+            pass
+        else:
+            add_domain(self.env.path, locale_dir)
+
     # IPermissionRequestor methods
     def get_permission_actions(self):
         return ['QUIET_MODE']
@@ -99,7 +111,7 @@ class QuietModule(Component, QuietBase):
                  req.path_info.startswith('/query') or
                  req.path_info.startswith('/report')):
             href = req.href(MODE, 'toggle')
-            a = tag.a(self._get_label(req), href=href, id=MODE)
+            a = tag.a(_(self._get_label(req)), href=href, id=MODE)
             add_ctxtnav(req, a)
             add_script(req, 'quiet/quiet.js')
             add_stylesheet(req, 'quiet/quiet.css')
@@ -111,6 +123,15 @@ class QuietModule(Component, QuietBase):
 class QuietAjaxModule(Component, QuietBase):
     implements(IRequestHandler)
 
+    def __init__ (self):
+        import pkg_resources
+        try:
+            locale_dir = pkg_resources.resource_filename(__name__, 'locale')
+        except KeyError:
+            pass
+        else:
+            add_domain(self.env.path, locale_dir)
+
     # IRequestHandler methods
     def match_request(self, req):
         return req.path_info.startswith('/' + MODE)
@@ -119,7 +140,7 @@ class QuietAjaxModule(Component, QuietBase):
         try:
             action = req.path_info[req.path_info.rfind('/') + 1:]
             is_quiet = self._set_quiet_action(req, action)
-            data = {'label': self._get_label(req, is_quiet),
+            data = {'label': _(self._get_label(req, is_quiet)),
                     'is_quiet': is_quiet}
             process_json(req, data)
         except Exception:

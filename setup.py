@@ -13,6 +13,23 @@ from setuptools import setup, find_packages
 PACKAGE = 'TracQuiet'
 VERSION = '1.0.2'
 
+extra = {}
+try:
+    from trac.util.dist  import  get_l10n_cmdclass
+    cmdclass = get_l10n_cmdclass()
+    if cmdclass:
+        extra['cmdclass'] = cmdclass
+        extractors = [
+            ('**.py',                'python', None),
+            ('**/templates/**.html', 'genshi', None),
+        ]
+        extra['message_extractors'] = {
+            'quiet': extractors,
+        }
+# i18n is implemented to be optional here
+except ImportError:
+    pass
+
 setup(
     name=PACKAGE,
     version=VERSION,
@@ -22,6 +39,8 @@ setup(
     license='3-Clause BSD',
     url='https://trac-hacks.org/wiki/QuietPlugin',
     packages=['quiet'],
-    package_data={'quiet': ['htdocs/*.js', 'htdocs/*.css', 'htdocs/*.png']},
-    entry_points={'trac.plugins': ['quiet.web_ui = quiet.web_ui']}
+    package_data={'quiet': ['htdocs/*.js', 'htdocs/*.css', 'htdocs/*.png',
+                            'locale/*/LC_MESSAGES/*.mo']},
+    entry_points={'trac.plugins': ['quiet.web_ui = quiet.web_ui']},
+    **extra
 )
