@@ -18,6 +18,7 @@ from trac.web.chrome import ITemplateProvider, add_ctxtnav, add_script, \
                             add_script_data, add_stylesheet
 from trac.web.main import IRequestFilter, IRequestHandler
 
+from quiet.api import QuietSystem
 
 
 MODE = 'quietmode'
@@ -30,23 +31,11 @@ try:
     class QuietEmailDistributor(EmailDistributor):
 	"""Specializes Announcer's email distributor to honor quiet mode."""
 	def distribute(self, transport, recipients, event):
-	    if hasattr(event, 'author') and self._is_quiet_mode(event.author):
+	    if hasattr(event, 'author') and\
+	       QuietSystem(self.env).is_quiet_mode(event.author):
 		return
 	    EmailDistributor.distribute(self, transport, recipients, event)
 
-	def _is_quiet_mode(self, user):
-	    db = self.env.get_db_cnx()
-	    cursor = db.cursor()
-	    cursor.execute("""
-		SELECT value
-		  FROM session_attribute
-		 WHERE sid=%s
-		   AND name=%s
-	    """, (user, MODE))
-	    result = cursor.fetchone()
-	    if not result:
-		return False
-	    return result[0] == '1'
 except ImportError:
     pass
 
