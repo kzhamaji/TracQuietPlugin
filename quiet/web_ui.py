@@ -21,11 +21,7 @@ from trac.web.main import IRequestFilter, IRequestHandler
 from trac.util.translation import domain_functions
 _, N_, add_domain = domain_functions('quiet', ('_', 'N_', 'add_domain'))
 
-from quiet.api import QuietSystem
-
-
-MODE = 'quietmode'
-LISTEN = 'quietlisten'
+from quiet.api import QuietSystem, MODE, LISTEN
 
 
 try:
